@@ -42,6 +42,8 @@ class bcolors:
   BOLD = '\033[1m'
   UNDERLINE = '\033[4m'
 
+DEBUG = False
+
 screenshotsDirectory = '/Users/jesusdelvalle/Documents/projects/make_slides/screenshots/'
 
 nameOfExcelColumnWithURLs = 'URL'
@@ -71,6 +73,17 @@ finalPowerPoint = "examples/Slides.pptx"
 #--------
 #| pic2 | text2
 #--------
+
+# Example Layout: layout 1.
+# No Title
+# 4 Pictures per slide, with corresponding text overlapping the picture.
+#####
+#---------------
+#| pic1 | pic2 |
+#---------------
+#| pic3 | pic4 |
+#---------------
+
 layout1 = '{"layout":"1", \
            "referenceHeight":3, \
            "totalHeight":9, \
@@ -79,6 +92,9 @@ layout1 = '{"layout":"1", \
            "pictureNameFont":40, \
            "pictureDescriptionFont":20, \
            "pictureUrlFont":12, \
+           "pictureNameColorR":255, \
+           "pictureNameColorG":255, \
+           "pictureNameColorB":255, \
            "titleHeight":1}'
 
 layout2 = '{"layout":"2", \
@@ -86,9 +102,12 @@ layout2 = '{"layout":"2", \
            "totalHeight":9, \
            "nColumnsPerSlide":2, \
            "textBoxPosition":"overlap", \
-           "pictureNameFont":28, \
-           "pictureDescriptionFont":20, \
-           "pictureUrlFont":12, \
+           "pictureNameFont":22, \
+           "pictureDescriptionFont":16, \
+           "pictureUrlFont":10, \
+           "pictureNameColorR":51, \
+           "pictureNameColorG":204, \
+           "pictureNameColorB":255, \
            "titleHeight":0}'
 
 layoutParameters = json.loads(layout2)
@@ -101,6 +120,9 @@ textBoxPosition = layoutParameters ["textBoxPosition"]
 pictureNameFont = layoutParameters ["pictureNameFont"]
 pictureDescriptionFont = layoutParameters ["pictureDescriptionFont"]
 pictureUrlFont = layoutParameters ["pictureUrlFont"]
+pictureNameColorR = layoutParameters ["pictureNameColorR"]
+pictureNameColorG = layoutParameters ["pictureNameColorG"]
+pictureNameColorB = layoutParameters ["pictureNameColorB"]
 
 pictureHeight = Inches (referenceHeight)
 pictureWidth = Inches (referenceHeight*9/5)
@@ -130,10 +152,11 @@ try:
 
     url = url.replace("https://","")
     url = url.replace("/","")
-    print (url)
+    if (DEBUG):
+      print (url)
     pictureFile = screenshotsDirectory + url + ".png"
 
-    if iRow == 0 & iColumn == 0:
+    if iRow == 0 and iColumn == 0:
       slide = powerpoint.slides.add_slide(layout)
       if titleHeight > 0:
         textBox = slide.shapes.add_textbox (Inches (0.05), Inches (0.0), Inches(14), Inches(1))
@@ -150,7 +173,7 @@ try:
 
     # 13.3 x 7.5 inches -> 4.43 x 1.875
 
-    left = Inches (iColumn * pictureWidth + (iColumn / 4.5))
+    left = (iColumn * pictureWidth) + (iColumn / 4.5)
     top = Inches (titleHeight + (iRow * referenceHeight) + (iRow / 4.5))
 
     picture=slide.shapes.add_picture (pictureFile, left, top, width = pictureWidth, height = pictureHeight)
@@ -160,18 +183,21 @@ try:
 
     if textBoxPosition == "right":
       left = left + pictureWidth
+      top = top
     elif textBoxPosition == "overlap":
       left = left
-    txBox = slide.shapes.add_textbox (left, top, Inches(totalHeight - titleHeight), Inches(referenceHeight))
+      top = (iRow * pictureHeight) + (pictureHeight / 1.5)
+    txBox = slide.shapes.add_textbox (left, top, pictureWidth, Inches(referenceHeight / 3))
     tf = txBox.text_frame
     tf.word_wrap = True
     fill = txBox.fill
     fill.solid()
     fill.fore_color.rgb = RGBColor (0, 0, 0)
 
-    p = tf.add_paragraph()
+    # A text_frame always contains one paragraph.
+    p = tf.paragraphs[0]
     p.font.size = Pt(pictureNameFont)
-    p.font.color.rgb = RGBColor(255, 255, 255)
+    p.font.color.rgb = RGBColor(pictureNameColorR, pictureNameColorG, pictureNameColorB)
     p.text = row [nameOfExcelColumnWithCompanyName]
     p = tf.add_paragraph()
 
@@ -190,13 +216,20 @@ try:
     p.font.color.rgb = RGBColor(255, 255, 255)
     p.text = row [nameOfExcelColumnWithURLs]
 
-    #j = j + 1
-    # print ("Shape written: " + str (j))
-    iRow = iRow + 1
-    # print ("iRow: " + str(iRow))
-    # iRow is 0 indexed.
-    if iRow == nRowsPerSlide:
-      iRow = 0
+    if (DEBUG == True):
+      print ("iColumn: " + str(iColumn))
+      print ("left " + str(left))
+      print ("top: " + str(top))
+      print ("iRow: " + str(iRow))
+
+    # First fill the rows, then the columns.
+    iColumn = iColumn + 1
+    if iColumn == nColumnsPerSlide:
+      iColumn = 0
+      iRow = iRow + 1
+      # iRow is 0 indexed.
+      if iRow == nRowsPerSlide:
+        iRow = 0
     i = i + 1
   print ("Number of companies: ", i)
   powerpoint.save (finalPowerPoint)
