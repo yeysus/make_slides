@@ -42,7 +42,7 @@ class bcolors:
   BOLD = '\033[1m'
   UNDERLINE = '\033[4m'
 
-DEBUG = False
+DEBUG = True
 
 screenshotsDirectory = '/Users/jesusdelvalle/Documents/projects/make_slides/screenshots/'
 
@@ -51,6 +51,10 @@ nameOfExcelColumnWithCompanyName = 'Name'
 nameOfExcelColumnWithYearFounded = 'Founded'
 nameOfExcelColumnWithHQCity = 'HQ'
 nameOfExcelColumnWithDescription = 'Description'
+# There should be a yes/no column to track if we want that row to be on the slides.
+nameOfExcelColumnToDecideIfItGoesToTheSlides = 'Use'
+# Value in that Column if No Screenshot should be taken.
+valueOfExcelColumnIfItGoesToTheSlides = 'No'
 
 # This title will appear on the top of every slide for certain formats.
 title = "Top30 BRITISH / WHERE to Make an Internship 2021"
@@ -102,9 +106,9 @@ layout2 = '{"layout":"2", \
            "totalHeight":9, \
            "nColumnsPerSlide":2, \
            "textBoxPosition":"overlap", \
-           "pictureNameFont":22, \
-           "pictureDescriptionFont":16, \
-           "pictureUrlFont":10, \
+           "pictureNameFont":20, \
+           "pictureDescriptionFont":14, \
+           "pictureUrlFont":8, \
            "pictureNameColorR":51, \
            "pictureNameColorG":204, \
            "pictureNameColorB":255, \
@@ -147,6 +151,10 @@ try:
   slide = powerpoint.slides.add_slide(layout)
   shape = slide.shapes
   for index, row in excel.iterrows():
+
+    use = row[nameOfExcelColumnToDecideIfItGoesToTheSlides]
+    if use == valueOfExcelColumnIfItGoesToTheSlides:
+      continue
 
     url = row [nameOfExcelColumnWithURLs]
 
